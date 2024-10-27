@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/data">
+        <file>mulhouse.json</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>mulhouse.json</file>
+    </qresource>
+    <qresource prefix="/ressources"/>
+</RCC>
