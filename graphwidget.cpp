@@ -11,9 +11,9 @@
 GraphWidget::GraphWidget(QWidget *parent)
     : QGraphicsView(parent), scene(new QGraphicsScene(this)) {
     setScene(scene);
-    setRenderHint(QPainter::Antialiasing);
+setBackgroundBrush(Qt::white);
     setMinimumSize(800, 600);
-
+    setMaximumSize(800,600);
     loadJsonData();  // Charge les données JSON
 }
 

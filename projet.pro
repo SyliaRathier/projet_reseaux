@@ -15,11 +15,13 @@ CONFIG += c++17
 
 SOURCES += \
     graphwidget.cpp \
+    hexagon.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     graphwidget.h \
+    hexagon.h \
     mainwindow.h
 
 FORMS += \
