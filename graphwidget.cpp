@@ -6,16 +6,38 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QWheelEvent>
+#include <QQuickWidget>
+#include <QQmlContext>
 
 
 GraphWidget::GraphWidget(QWidget *parent)
     : QGraphicsView(parent), scene(new QGraphicsScene(this)) {
+
+    // Set up the QGraphicsView scene
     setScene(scene);
-setBackgroundBrush(Qt::white);
-    setMinimumSize(800, 600);
-    setMaximumSize(800,600);
-    loadJsonData();  // Charge les données JSON
+    setBackgroundBrush(Qt::white);
+    setMinimumSize(1000, 800);
+    // setMaximumSize(800,600);  // You can remove this line if you want to allow resizing
+
+    // Load the JSON data for the graph
+    loadJsonData();
+
+    // Set up the QQuickWidget for the map
+    QQuickWidget *mapWidget = new QQuickWidget(this);
+    mapWidget->setSource(QUrl(QStringLiteral("qrc:/mapview.qml")));
+
+    // Make the map widget's background transparent
+    mapWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    mapWidget->setAttribute(Qt::WA_TranslucentBackground);
+    mapWidget->setWindowFlag(Qt::FramelessWindowHint);  // Remove window frame if needed
+
+    // Position mapWidget to cover the entire view area
+    mapWidget->setGeometry(0, 0, width(), height());  // Same dimensions as the GraphWidget
+
+    // Ensure the map and graph widgets are layered correctly
+    mapWidget->raise();  // Ensure the map is above the graph if needed
 }
+
 
 QPointF GraphWidget::convertToSceneCoordinates(double lon, double lat) {
     const double scaleLon = 10000;

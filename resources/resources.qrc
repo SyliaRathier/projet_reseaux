@@ -4,6 +4,7 @@
     </qresource>
     <qresource prefix="/">
         <file>mulhouse.json</file>
+        <file>mapview.qml</file>
     </qresource>
     <qresource prefix="/ressources"/>
 </RCC>
