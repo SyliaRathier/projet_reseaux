@@ -2,7 +2,7 @@
 #include <QWidget>
 
 #include "MainWindow.h"
-#include "Hexagon.h"
+#include "hexagon.h"
 #include <QVBoxLayout>  // Ajouté pour organiser les widgets
 
 MainWindow::MainWindow(QWidget *parent)

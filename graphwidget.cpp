@@ -10,14 +10,16 @@
 #include <QQmlContext>
 
 
+#include <QGraphicsOpacityEffect>
+
 GraphWidget::GraphWidget(QWidget *parent)
     : QGraphicsView(parent), scene(new QGraphicsScene(this)) {
 
     // Set up the QGraphicsView scene
     setScene(scene);
     setBackgroundBrush(Qt::white);
-    setMinimumSize(1000, 800);
-    // setMaximumSize(800,600);  // You can remove this line if you want to allow resizing
+    setMinimumSize(1500, 800);
+    setMaximumSize(1500, 800);  // You can remove this line if you want to allow resizing
 
     // Load the JSON data for the graph
     loadJsonData();
@@ -30,6 +32,14 @@ GraphWidget::GraphWidget(QWidget *parent)
     mapWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
     mapWidget->setAttribute(Qt::WA_TranslucentBackground);
     mapWidget->setWindowFlag(Qt::FramelessWindowHint);  // Remove window frame if needed
+
+    // Make the map widget non-interactive so it doesn't block the graph
+    mapWidget->setAttribute(Qt::WA_TransparentForMouseEvents);
+
+    // Set the opacity effect to make the map widget semi-transparent
+    QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(mapWidget);
+    opacityEffect->setOpacity(0.7);  // Set the opacity (0.0 is fully transparent, 1.0 is fully opaque)
+    mapWidget->setGraphicsEffect(opacityEffect);
 
     // Position mapWidget to cover the entire view area
     mapWidget->setGeometry(0, 0, width(), height());  // Same dimensions as the GraphWidget

@@ -16,7 +16,7 @@ Rectangle {
 
         // Adjust zoom level to fit the bounding box area
         zoomLevel: 16
-
+        opacity: 0.7
         // Optional: Customize markers or overlays as needed
     }
 }
