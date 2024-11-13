@@ -1,93 +1,76 @@
 #include "GraphWidget.h"
-#include <QDebug>
-#include <QtConcurrent>
-#include <QFuture>
-#include <QGraphicsLineItem>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QWheelEvent>
+
+GraphWidget::GraphWidget(QWidget *parent) : QWidget(parent) {
+    // Ajout de noeuds et arêtes comme avant
+    addNode(QPointF(100, 100), "Porte Jeune");
+    addNode(QPointF(200, 150), "Place de la Réunion");
+    addNode(QPointF(300, 100), "Gare Centrale");
+    addNode(QPointF(250, 200), "Nouveau Bassin");
+    addNode(QPointF(150, 250), "Parc Salvator");
+
+    addEdge(0, 1);
+    addEdge(1, 2);
+    addEdge(0, 3);
+    addEdge(3, 4);
+    addEdge(1, 4);
+
+    // Ajouter des voitures entre les noeuds, avec des vitesses différentes
+    addCar(0, 1, 0.01); // Voiture entre Porte Jeune et Place de la Réunion
+    addCar(1, 2, 0.02); // Voiture entre Place de la Réunion et Gare Centrale
+    addCar(3, 4, 0.02); // Voiture entre Parc salvator et nouveau bassin
 
 
-GraphWidget::GraphWidget(QWidget *parent)
-    : QGraphicsView(parent), scene(new QGraphicsScene(this)) {
-    setScene(scene);
-    setRenderHint(QPainter::Antialiasing);
-    setMinimumSize(800, 600);
-
-    loadJsonData();  // Charge les données JSON
+    // Configurer le timer pour animer les voitures
+    connect(&timer, &QTimer::timeout, this, &GraphWidget::updateCars);
+    timer.start(50); // Mise à jour toutes les 50 ms
 }
 
-QPointF GraphWidget::convertToSceneCoordinates(double lon, double lat) {
-    const double scaleLon = 10000;
-    const double scaleLat = 10000;
-    return QPointF(lon * scaleLon, -lat * scaleLat);
+void GraphWidget::addNode(const QPointF& pos, const QString& name) {
+    nodes.push_back({pos, name});
 }
 
-void GraphWidget::loadJsonData() {
-    QFile file(":/data/mulhouse.json");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Impossible d'ouvrir le fichier JSON";
-        return;
-    }
-
-    QByteArray data = file.readAll();
-    QJsonDocument doc = QJsonDocument::fromJson(data);
-    if (doc.isNull()) {
-        qWarning() << "Le document JSON est invalide";
-        return;
-    }
-
-    QJsonObject jsonObj = doc.object();
-    elements = jsonObj["elements"].toArray();  // Stocke les éléments pour drawGraph
-
-    // Charge les coordonnées des nœuds
-    for (const QJsonValue &value : elements) {
-        QJsonObject element = value.toObject();
-        if (element["type"] == "node") {
-            qint64 id = element["id"].toVariant().toLongLong();
-            double lat = element["lat"].toDouble();
-            double lon = element["lon"].toDouble();
-            nodeCoordinates[id] = convertToSceneCoordinates(lon, lat);
-        }
-    }
-
-    drawGraph();  // Dessine le graphe après le chargement
+void GraphWidget::addEdge(int startNode, int endNode) {
+    edges.push_back({startNode, endNode});
 }
 
-void GraphWidget::wheelEvent(QWheelEvent *event) {
-    const double scaleFactor = 1.15;  // Facteur de zoom
-
-    if (event->angleDelta().y() > 0) {
-        // Zoom avant
-        scale(scaleFactor, scaleFactor);
-    } else {
-        // Zoom arrière
-        scale(1.0 / scaleFactor, 1.0 / scaleFactor);
-    }
+void GraphWidget::addCar(int startNode, int endNode, float speed) {
+    // Obtenir les positions des noeuds de départ et d'arrivée
+    QPointF startPosition = nodes[startNode].position;
+    QPointF endPosition = nodes[endNode].position;
+    cars.push_back(Car(startPosition, endPosition, speed));
 }
 
-void GraphWidget::drawGraph() {
-    for (const QJsonValue &value : elements) {
-        QJsonObject element = value.toObject();
-        if (element["type"] == "way") {
-            QJsonArray nodes = element["nodes"].toArray();
-            for (int i = 0; i < nodes.size() - 1; ++i) {
-                qint64 id1 = nodes[i].toVariant().toLongLong();
-                qint64 id2 = nodes[i + 1].toVariant().toLongLong();
+void GraphWidget::updateCars() {
+    // Met à jour la position de chaque voiture
+    for (auto &car : cars) {
+        car.updatePosition();
+    }
+    update(); // Redessine le widget
+}
 
-                if (nodeCoordinates.contains(id1) && nodeCoordinates.contains(id2)) {
-                    QPointF point1 = nodeCoordinates[id1];
-                    QPointF point2 = nodeCoordinates[id2];
+void GraphWidget::paintEvent(QPaintEvent *) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
 
-                    // Créer et ajouter une ligne entre les deux points
-                    QGraphicsLineItem *line = new QGraphicsLineItem(QLineF(point1, point2));
-                    scene->addItem(line);
-                }
-            }
-        }
+    // Dessiner les arêtes
+    painter.setPen(QPen(Qt::black, 2));
+    for (const auto& edge : edges) {
+        const QPointF& startPos = nodes[edge.startNode].position;
+        const QPointF& endPos = nodes[edge.endNode].position;
+        painter.drawLine(startPos, endPos);
     }
 
-    // Ajuste la vue pour montrer tout le graphe
-    scene->setSceneRect(scene->itemsBoundingRect());  // Définit les limites de la scène
-    fitInView(scene->sceneRect(), Qt::KeepAspectRatio);  // Ajuste la vue pour le graphe
+    // Dessiner les noeuds
+    painter.setBrush(Qt::blue);
+    for (const auto& node : nodes) {
+        painter.drawEllipse(node.position, 8, 8); // Noeuds en cercles bleus
+        painter.drawText(node.position.x() + 10, node.position.y(), node.name); // Nom de l'intersection
+    }
+
+    // Dessiner les voitures
+    painter.setBrush(Qt::red);
+    for (const auto& car : cars) {
+        QPointF carPos = car.getPosition();
+        painter.drawEllipse(carPos, 5, 5); // Voitures en petits cercles rouges
+    }
 }

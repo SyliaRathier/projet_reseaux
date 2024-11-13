@@ -3,12 +3,14 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-{
+    , ui(new Ui::MainWindow) {
     ui->setupUi(this);
+
+    // Créer le widget pour le graphe et le mettre comme widget central
+    graphWidget = new GraphWidget(this);
+    setCentralWidget(graphWidget);
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
