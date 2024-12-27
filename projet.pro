@@ -16,11 +16,13 @@ CONFIG += c++17
 SOURCES += \
     graphwidget.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    vehicle.cpp
 
 HEADERS += \
     graphwidget.h \
-    mainwindow.h
+    mainwindow.h \
+    vehicle.h
 
 FORMS += \
     mainwindow.ui

@@ -1,7 +1,14 @@
+#ifndef GRAPHWIDGET_H
+#define GRAPHWIDGET_H
+
 #include <QGraphicsView>
+#include <QGraphicsEllipseItem>
+#include <QGraphicsScene>
+#include <QTimer>
 #include <QMap>
 #include <QPointF>
 #include <QJsonArray>
+#include <QVector>
 
 class GraphWidget : public QGraphicsView {
     Q_OBJECT
@@ -9,14 +16,23 @@ class GraphWidget : public QGraphicsView {
 public:
     explicit GraphWidget(QWidget *parent = nullptr);
 
+protected:
+    void wheelEvent(QWheelEvent *event) override;
+
 private:
-    QGraphicsScene *scene;
-    QMap<qint64, QPointF> nodeCoordinates;
-    QJsonArray elements;  // Ajout de elements ici
-
-    QPointF convertToSceneCoordinates(double lon, double lat);
     void loadJsonData();
+    void createVehicles();
+    void updateVehiclePositions();
     void drawGraph();
-    void wheelEvent(QWheelEvent *event) override; // Déclaration de la méthode de zoom
+    QPointF convertToSceneCoordinates(double lon, double lat);
 
+    QGraphicsScene *scene;
+    QTimer *timer;
+    QMap<qint64, QPointF> nodeCoordinates; // Coordonnées des nœuds
+    QList<QGraphicsEllipseItem*> vehicles; // Liste des véhicules
+    QMap<QGraphicsEllipseItem*, QVector<QPointF>> vehicleRoutes; // Itinéraires des véhicules
+    QMap<QGraphicsEllipseItem*, int> vehicleRouteIndex; // Index de position pour chaque véhicule dans son itinéraire
+    QJsonArray elements;
 };
+
+#endif // GRAPHWIDGET_H
