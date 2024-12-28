@@ -1,31 +1,28 @@
 #include "GraphWidget.h"
 #include <QDebug>
-#include <QtConcurrent>
-#include <QFuture>
 #include <QGraphicsLineItem>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QWheelEvent>
-#include <QQuickWidget>
-#include <QQmlContext>
 #include <QGraphicsOpacityEffect>
 #include <QPainterPath>
+#include <QFile>
+#include <QXmlStreamReader>
 
 GraphWidget::GraphWidget(QWidget *parent)
     : QGraphicsView(parent), scene(new QGraphicsScene(this)) {
     setScene(scene);
     setBackgroundBrush(Qt::white);
     setMinimumSize(1500, 800);
-    setMaximumSize(1500, 800);  // You can remove this line if you want to allow resizing
+    setMaximumSize(1500, 800); // Keep or remove as needed
 
     loadOsmData();  // Load and process the OSM data
 }
 
 QPointF GraphWidget::convertToSceneCoordinates(double lon, double lat) {
-    const double scaleLon = 10000;
-    const double scaleLat = 10000;
+    const double scaleLon = 10000;  // Adjust if necessary
+    const double scaleLat = 10000;  // Adjust if necessary
 
-    // Debugging: Check the conversion
     qDebug() << "Converted coordinates:" << lon << lat
              << "->" << lon * scaleLon << "," << -lat * scaleLat;
 
@@ -33,9 +30,9 @@ QPointF GraphWidget::convertToSceneCoordinates(double lon, double lat) {
 }
 
 void GraphWidget::loadOsmData() {
-    QFile file(":/data/map.osm");
+    QFile file(":/data/map.osm"); // **MAKE SURE THIS PATH IS CORRECT**
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Impossible d'ouvrir le fichier OSM";
+        qWarning() << "Could not open OSM file";
         return;
     }
 
@@ -68,10 +65,12 @@ void GraphWidget::loadOsmData() {
                         type = "building";
                     } else if (key == "landuse" && value == "residential") {
                         type = "residential";
-                    } else if (key == "waterway" || value == "water") {
+                    } else if (key == "waterway" || value == "water" || key == "natural") {
                         type = "water";
                     } else if (key == "landuse" && value == "park") {
                         type = "park";
+                    } else if (key == "leisure" && value == "garden") {  // Directly handle garden
+                        type = "garden";
                     }
                 }
             }
@@ -84,7 +83,7 @@ void GraphWidget::loadOsmData() {
     }
 
     if (xml.hasError()) {
-        qWarning() << "Erreur lors de l'analyse OSM:" << xml.errorString();
+        qWarning() << "Error parsing OSM file:" << xml.errorString();
     }
     file.close();
 
@@ -127,11 +126,9 @@ void GraphWidget::drawGraph() {
         pen.setJoinStyle(Qt::RoundJoin);  // Ensure round joins between lines
         pen.setCapStyle(Qt::RoundCap);    // Smooth line caps
 
-        // Adjust line thickness dynamically based on the path length or density
-        double lineThickness = 0.5;  // Default thin line
-        if (points.size() > 10) {  // If the path is long, make the line slightly thicker
-            lineThickness = 0.8;
-        }
+        // Adjust line thickness slightly
+        double lineThickness = 1.2;  // Increase the thickness for clearer lines
+        pen.setWidthF(lineThickness); // Apply line thickness
 
         // Create a path item for the roads
         QGraphicsPathItem *pathItem = new QGraphicsPathItem();
@@ -139,7 +136,7 @@ void GraphWidget::drawGraph() {
 
         // Drawing the map features based on their type
         if (type == "road") {
-            // Draw roads with thinner and smoother lines
+            // Draw roads with thicker lines
             QPainterPath path(points.first());
             for (int i = 1; i < points.size(); ++i) {
                 path.lineTo(points[i]);
@@ -147,11 +144,12 @@ void GraphWidget::drawGraph() {
             pathItem->setPath(path);
             scene->addItem(pathItem);
         } else if (type == "building") {
-            // Draw buildings as filled polygons (rectangles)
+            // Draw buildings without borders (no pen)
             QGraphicsPolygonItem *building = new QGraphicsPolygonItem();
             QPolygonF polygon(points);
             building->setPolygon(polygon);
             building->setBrush(QBrush(Qt::lightGray));  // Light gray for buildings
+            building->setPen(QPen(Qt::transparent));    // No border
             scene->addItem(building);
         } else if (type == "water") {
             // Draw water bodies (rivers, lakes) in blue with more opacity
@@ -159,33 +157,18 @@ void GraphWidget::drawGraph() {
             QPolygonF polygon(points);
             water->setPolygon(polygon);
             water->setBrush(QBrush(Qt::darkBlue));  // Blue for water
-            water->setOpacity(0.7);  // Slight transparency for water bodies
+            water->setOpacity(0.6);  // Slight transparency for water bodies
             scene->addItem(water);
         } else if (type == "park" || type == "garden") {
-            // Handle gardens specifically
-            if (element.contains("tags")) {
-                QJsonObject tags = element["tags"].toObject();
-                if (tags.contains("leisure") && tags["leisure"].toString() == "garden") {
-                    // Check for garden type (private or public)
-                    if (tags.contains("garden:type") && tags["garden:type"].toString() == "private") {
-                        // Render private gardens with a distinct color and transparency
-                        QGraphicsPolygonItem *garden = new QGraphicsPolygonItem();
-                        QPolygonF polygon(points);
-                        garden->setPolygon(polygon);
-                        garden->setBrush(QBrush(Qt::darkGreen));  // Dark green for private gardens
-                        garden->setOpacity(0.5);  // Slight transparency for private gardens
-                        scene->addItem(garden);
-                    } else {
-                        // Render public gardens with a lighter green
-                        QGraphicsPolygonItem *garden = new QGraphicsPolygonItem();
-                        QPolygonF polygon(points);
-                        garden->setPolygon(polygon);
-                        garden->setBrush(QBrush(Qt::green));  // Lighter green for public gardens
-                        garden->setOpacity(0.6);  // Slight transparency
-                        scene->addItem(garden);
-                    }
-                }
-            }
+            // Handle parks and gardens specifically
+            QColor color = (type == "park") ? Qt::green : Qt::darkGreen; // Different colors
+            double opacity = (type == "park") ? 0.6 : 0.5;  // Adjust transparency for parks vs gardens
+
+            QGraphicsPolygonItem *item = new QGraphicsPolygonItem(QPolygonF(points));
+            item->setBrush(color);
+            item->setOpacity(opacity);
+            scene->addItem(item);
+
         } else if (type == "residential") {
             // Draw residential areas in light yellow with slight opacity
             QGraphicsPolygonItem *residential = new QGraphicsPolygonItem();
