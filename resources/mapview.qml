@@ -15,8 +15,8 @@ Rectangle {
         center: QtPositioning.coordinate((47.74453 + 47.75026) / 2, (7.32325 + 7.35230) / 2)
 
         // Adjust zoom level to fit the bounding box area
-        zoomLevel: 16
-        opacity: 0.7
+        zoomLevel: 12
+        opacity: 0.5
         // Optional: Customize markers or overlays as needed
     }
 }

@@ -9,10 +9,10 @@ void Hexagon::draw(QPainter &painter) const {
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     // Set opacity to 20% (can be between 0 and 1)
-    painter.setOpacity(0.5);
+    painter.setOpacity(1);
 
     // Set the brush color to white
-    painter.setBrush(Qt::gray);
+    painter.setBrush(Qt::lightGray);
 
     // Set the pen color to black for the hexagon outline
     painter.setPen(Qt::white);

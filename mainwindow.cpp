@@ -6,7 +6,7 @@
 #include <QVBoxLayout>  // Ajouté pour organiser les widgets
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), numRows(20), numCols(30), radius(40) {
+    : QMainWindow(parent), numRows(20), numCols(40), radius(30) {
     QWidget *centralWidget = new QWidget(this);  // Crée un widget central pour la fenêtre
     setCentralWidget(centralWidget);
 

@@ -15,7 +15,7 @@ private:
     QJsonArray elements;  // Ajout de elements ici
 
     QPointF convertToSceneCoordinates(double lon, double lat);
-    void loadJsonData();
+    void loadOsmData();
     void drawGraph();
     void wheelEvent(QWheelEvent *event) override; // Déclaration de la méthode de zoom
 

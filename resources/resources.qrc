@@ -1,10 +1,12 @@
 <RCC>
     <qresource prefix="/data">
         <file>mulhouse.json</file>
+        <file>map.osm</file>
     </qresource>
     <qresource prefix="/">
         <file>mulhouse.json</file>
         <file>mapview.qml</file>
+        <file>map.osm</file>
     </qresource>
     <qresource prefix="/ressources"/>
 </RCC>
