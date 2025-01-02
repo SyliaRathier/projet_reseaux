@@ -3,7 +3,7 @@
 #include <QDebug>
 
 Vehicule::Vehicule(QGraphicsScene *scene, const QPointF &startPos, const QVector<QPointF> &path)
-    : QGraphicsEllipseItem(-2.5, -2.5, 5, 5), path(path), currentPointIndex(0), direction(1) {
+    : QGraphicsEllipseItem(-2.5, -2.5, 5, 5), path(path), currentPointIndex(0), direction(1), speed(1.0) {
     setBrush(Qt::red);
     setPos(startPos);
     scene->addItem(this);
@@ -13,11 +13,12 @@ Vehicule::Vehicule(QGraphicsScene *scene, const QPointF &startPos, const QVector
     connect(moveTimer, &QTimer::timeout, this, &Vehicule::moveToNextPoint);
 
     if (!path.isEmpty()) {
-        moveTimer->start(500);  // Déplacement toutes les 500 ms
+        moveTimer->start(100);  // Déplacement toutes les 100 ms
     } else {
         qWarning() << "Le chemin est vide pour ce véhicule.";
     }
 }
+
 
 void Vehicule::startMoving() {
     if (!path.isEmpty()) {
@@ -28,20 +29,38 @@ void Vehicule::startMoving() {
 void Vehicule::moveToNextPoint() {
     if (path.isEmpty()) return;
 
-    // Déplacer au prochain point
-    setPos(path[currentPointIndex]);
+    QPointF currentPos = pos();
+    QPointF targetPos = path[currentPointIndex];
 
-    // Inverser la direction si nécessaire
-    if (direction == 1 && currentPointIndex == path.size() - 1) {
-        direction = -1;
-    } else if (direction == -1 && currentPointIndex == 0) {
-        direction = 1;
+    // Calculer le prochain pas
+    QPointF nextPos = calculateNextStep(currentPos, targetPos, speed);
+    setPos(nextPos);
+
+    // Vérifier si le véhicule a atteint le point cible
+    if (nextPos == targetPos) {
+        // Inverser la direction si nécessaire
+        if (direction == 1 && currentPointIndex == path.size() - 1) {
+            direction = -1;
+        } else if (direction == -1 && currentPointIndex == 0) {
+            direction = 1;
+        }
+
+        // Passer au point suivant
+        currentPointIndex += direction;
     }
-
-    // Passer au point suivant
-    currentPointIndex += direction;
 }
 
+
+QPointF Vehicule::calculateNextStep(const QPointF &currentPos, const QPointF &targetPos, qreal speed) {
+    QLineF line(currentPos, targetPos);
+    if (line.length() <= speed) {
+        return targetPos;
+    } else {
+        QLineF moveLine(currentPos, targetPos);
+        moveLine.setLength(speed);
+        return moveLine.p2();
+    }
+}
 
 
 // void Vehicule::extendPath(int pointsToAdd) {

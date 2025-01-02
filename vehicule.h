@@ -15,6 +15,7 @@ public:
 
     void startMoving();  // Démarrer le mouvement du véhicule
     void extendPath(int pointsToAdd);  // Ajouter des points à l'itinéraire
+    QPointF calculateNextStep(const QPointF &currentPos, const QPointF &targetPos, qreal speed);
 
 public slots:
     void moveToNextPoint();  // Déplacer le véhicule vers le prochain point
@@ -23,6 +24,7 @@ private:
     QVector<QPointF> path;  // Itinéraire du véhicule (une liste de points)
     int currentPointIndex;  // Indice du point courant dans l'itinéraire
     int direction;  // 1 = avancer, -1 = reculer
+    qreal speed;
     QTimer *moveTimer;  // Timer pour déplacer le véhicule
 };
 

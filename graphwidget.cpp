@@ -32,7 +32,7 @@ QPointF GraphWidget::convertToSceneCoordinates(double lon, double lat) {
 
 // Charger et analyser les données OSM
 void GraphWidget::loadOsmData() {
-    QFile file(":/data/map.osm");
+    QFile file(":/map.osm");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qWarning() << "Impossible d'ouvrir le fichier OSM";
         return;
@@ -43,7 +43,7 @@ void GraphWidget::loadOsmData() {
         xml.readNext();
 
         // Analyse des nœuds (nodes)
-        if (xml.isStartElement() && xml.name() == "node") {
+        if (xml.isStartElement() && xml.name() == QString("node")) {
             qint64 id = xml.attributes().value("id").toLongLong();
             double lat = xml.attributes().value("lat").toDouble();
             double lon = xml.attributes().value("lon").toDouble();
@@ -51,16 +51,16 @@ void GraphWidget::loadOsmData() {
         }
 
         // Analyse des chemins (ways)
-        if (xml.isStartElement() && xml.name() == "way") {
+        if (xml.isStartElement() && xml.name() == QString("way")) {
             QJsonArray nodes;
             QString type;
 
-            while (!(xml.isEndElement() && xml.name() == "way")) {
+            while (!(xml.isEndElement() && xml.name() == QString("way"))) {
                 xml.readNext();
-                if (xml.isStartElement() && xml.name() == "nd") {
+                if (xml.isStartElement() && xml.name() == QString("nd")) {
                     qint64 ref = xml.attributes().value("ref").toLongLong();
                     nodes.append(ref);
-                } else if (xml.isStartElement() && xml.name() == "tag") {
+                } else if (xml.isStartElement() && xml.name() == QString("tag")) {
                     QString key = xml.attributes().value("k").toString();
                     QString value = xml.attributes().value("v").toString();
                     if (key == "highway") {
