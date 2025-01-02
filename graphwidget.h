@@ -33,6 +33,7 @@ private:
     void wheelEvent(QWheelEvent *event) override;  // Gestion du zoom
 
     void createVehicules();  // Créer les véhicules
+
 };
 
 #endif // GRAPHWIDGET_H
