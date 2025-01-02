@@ -17,12 +17,14 @@ SOURCES += \
     graphwidget.cpp \
     hexagon.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    vehicule.cpp
 
 HEADERS += \
     graphwidget.h \
     hexagon.h \
-    mainwindow.h
+    mainwindow.h \
+    vehicule.h
 
 FORMS += \
     mainwindow.ui
