@@ -140,7 +140,7 @@ void GraphWidget::drawGraph() {
 
         QVector<QPointF> points;
 
-        // Récupérer les coordonnées des nœuds
+        // Collect coordinates for this element
         for (const QJsonValue &nodeId : nodes) {
             qint64 id = nodeId.toVariant().toLongLong();
             if (nodeCoordinates.contains(id)) {
@@ -148,19 +148,27 @@ void GraphWidget::drawGraph() {
             }
         }
 
+        // Skip elements without valid coordinates
         if (points.isEmpty()) {
             continue;
         }
 
+        // Set up the painter for smoother lines
         QPen pen;
-        pen.setJoinStyle(Qt::RoundJoin);
-        pen.setCapStyle(Qt::RoundCap);
-        pen.setWidthF(0.5);
+        pen.setJoinStyle(Qt::RoundJoin);  // Ensure round joins between lines
+        pen.setCapStyle(Qt::RoundCap);    // Smooth line caps
 
+        // Adjust line thickness slightly
+        double lineThickness = 1.2;  // Increase the thickness for clearer lines
+        pen.setWidthF(lineThickness); // Apply line thickness
+
+        // Create a path item for the roads
         QGraphicsPathItem *pathItem = new QGraphicsPathItem();
         pathItem->setPen(pen);
 
+        // Drawing the map features based on their type
         if (type == "road") {
+            // Draw roads with thicker lines
             QPainterPath path(points.first());
             for (int i = 1; i < points.size(); ++i) {
                 path.lineTo(points[i]);
@@ -168,13 +176,43 @@ void GraphWidget::drawGraph() {
             pathItem->setPath(path);
             scene->addItem(pathItem);
         } else if (type == "building") {
+            // Draw buildings without borders (no pen)
             QGraphicsPolygonItem *building = new QGraphicsPolygonItem();
-            building->setPolygon(QPolygonF(points));
-            building->setBrush(QBrush(Qt::lightGray));
+            QPolygonF polygon(points);
+            building->setPolygon(polygon);
+            building->setBrush(QBrush(Qt::lightGray));  // Light gray for buildings
+            building->setPen(QPen(Qt::transparent));    // No border
             scene->addItem(building);
+        } else if (type == "water") {
+            // Draw water bodies (rivers, lakes) in blue with more opacity
+            QGraphicsPolygonItem *water = new QGraphicsPolygonItem();
+            QPolygonF polygon(points);
+            water->setPolygon(polygon);
+            water->setBrush(QBrush(Qt::darkBlue));  // Blue for water
+            water->setOpacity(0.6);  // Slight transparency for water bodies
+            scene->addItem(water);
+        } else if (type == "park" || type == "garden") {
+            // Handle parks and gardens specifically
+            QColor color = (type == "park") ? Qt::green : Qt::darkGreen; // Different colors
+            double opacity = (type == "park") ? 0.6 : 0.5;  // Adjust transparency for parks vs gardens
+
+            QGraphicsPolygonItem *item = new QGraphicsPolygonItem(QPolygonF(points));
+            item->setBrush(color);
+            item->setOpacity(opacity);
+            scene->addItem(item);
+
+        } else if (type == "residential") {
+            // Draw residential areas in light yellow with slight opacity
+            QGraphicsPolygonItem *residential = new QGraphicsPolygonItem();
+            QPolygonF polygon(points);
+            residential->setPolygon(polygon);
+            residential->setBrush(QBrush(Qt::yellow));  // Light yellow for residential
+            residential->setOpacity(0.8);  // Slight transparency
+            scene->addItem(residential);
         }
     }
 
+    // Adjust the view to show the entire map
     scene->setSceneRect(scene->itemsBoundingRect());
     fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 }
